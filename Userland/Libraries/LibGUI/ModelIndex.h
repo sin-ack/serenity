@@ -77,7 +77,13 @@ struct Formatter<GUI::ModelIndex> : Formatter<FormatString> {
 
 template<>
 struct Traits<GUI::ModelIndex> : public GenericTraits<GUI::ModelIndex> {
-    static unsigned hash(const GUI::ModelIndex& index) { return pair_int_hash(index.row(), index.column()); }
+    static unsigned hash(const GUI::ModelIndex& index)
+    {
+        if (index.parent().is_valid())
+            return pair_int_hash(pair_int_hash(index.row(), index.column()), hash(index.parent()));
+        else
+            return pair_int_hash(index.row(), index.column());
+    }
 };
 
 }
