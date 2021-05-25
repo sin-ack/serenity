@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/RefCounted.h>
-#include <AK/RefPtr.h>
+#include <AK/WeakPtr.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/ModelIndex.h>
 
@@ -15,9 +15,9 @@ namespace GUI {
 
 /// A PersistentHandle is an internal data structure used to keep track of the
 /// target of multiple PersistentModelIndex instances.
-class PersistentHandle : public RefCounted<PersistentHandle> {
+class PersistentHandle : public Weakable<PersistentHandle> {
     friend Model;
-    friend class PersistentModelIndex;
+    friend PersistentModelIndex;
 
     PersistentHandle(ModelIndex const& index)
         : m_index(index)
@@ -46,7 +46,7 @@ public:
     operator ModelIndex() const;
 
 private:
-    RefPtr<PersistentHandle> m_handle;
+    WeakPtr<PersistentHandle> m_handle;
 };
 
 }

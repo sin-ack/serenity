@@ -64,7 +64,7 @@ ModelIndex PersistentModelIndex::parent() const
 PersistentModelIndex::operator ModelIndex() const
 {
     if (m_handle.is_null())
-        return ModelIndex();
+        return {};
     else
         return m_handle->m_index;
 }

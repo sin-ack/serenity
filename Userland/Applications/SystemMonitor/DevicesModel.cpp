@@ -173,5 +173,6 @@ void DevicesModel::update()
     fill_in_paths_from_dir("/dev");
     fill_in_paths_from_dir("/dev/pts");
 
-    did_update();
+    // FIXME: granularly update this.
+    invalidate();
 }
