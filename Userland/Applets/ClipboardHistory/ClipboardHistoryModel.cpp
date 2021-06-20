@@ -107,7 +107,7 @@ void ClipboardHistoryModel::add_item(const GUI::Clipboard::DataAndType& item)
         m_history_items.take_last();
 
     m_history_items.prepend(item);
-    update();
+    invalidate();
 }
 
 void ClipboardHistoryModel::remove_item(int index)

@@ -226,11 +226,11 @@ int main(int argc, char** argv)
     process_table_view.set_column_visible(ProcessModel::Column::DirtyPrivate, true);
 
     process_table_view.set_key_column_and_sort_order(ProcessModel::Column::CPU, GUI::SortOrder::Descending);
-    process_table_view.model()->update();
+    process_table_view.model()->invalidate();
 
     auto& refresh_timer = window->add<Core::Timer>(
         3000, [&] {
-            process_table_view.model()->update();
+            process_table_view.model()->invalidate();
             if (auto* memory_stats_widget = MemoryStatsWidget::the())
                 memory_stats_widget->refresh();
         });
@@ -570,7 +570,7 @@ NonnullRefPtr<GUI::Widget> build_file_systems_tab()
 
         fs_table_view.set_column_painting_delegate(3, make<ProgressbarPaintingDelegate>());
 
-        fs_table_view.model()->update();
+        fs_table_view.model()->invalidate();
     };
     return fs_widget;
 }
@@ -628,7 +628,7 @@ NonnullRefPtr<GUI::Widget> build_pci_devices_tab()
             });
 
         pci_table_view.set_model(GUI::SortingProxyModel::create(GUI::JsonArrayModel::create("/proc/pci", move(pci_fields))));
-        pci_table_view.model()->update();
+        pci_table_view.model()->invalidate();
     };
 
     return pci_widget;
@@ -644,7 +644,7 @@ NonnullRefPtr<GUI::Widget> build_devices_tab()
 
         auto& devices_table_view = self.add<GUI::TableView>();
         devices_table_view.set_model(GUI::SortingProxyModel::create(DevicesModel::create()));
-        devices_table_view.model()->update();
+        devices_table_view.model()->invalidate();
     };
 
     return devices_widget;
@@ -748,7 +748,7 @@ NonnullRefPtr<GUI::Widget> build_processors_tab()
 
         auto& processors_table_view = self.add<GUI::TableView>();
         processors_table_view.set_model(GUI::JsonArrayModel::create("/proc/cpuinfo", move(processors_field)));
-        processors_table_view.model()->update();
+        processors_table_view.model()->invalidate();
     };
 
     return processors_widget;
