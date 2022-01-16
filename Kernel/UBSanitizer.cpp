@@ -16,7 +16,7 @@ bool AK::UBSanitizer::g_ubsan_is_deadly { true };
 
 extern "C" {
 
-static void print_location(const SourceLocation& location)
+static void print_location(const AK::UBSanitizer::SourceLocation& location)
 {
     if (!location.filename())
         critical_dmesgln("KUBSAN: in unknown file");
@@ -50,15 +50,15 @@ void __ubsan_handle_nullability_arg(const NonnullArgData& data)
     print_location(data.location);
 }
 
-void __ubsan_handle_nonnull_return_v1(const NonnullReturnData&, const SourceLocation&) __attribute__((used));
-void __ubsan_handle_nonnull_return_v1(const NonnullReturnData&, const SourceLocation& location)
+void __ubsan_handle_nonnull_return_v1(const NonnullReturnData&, const AK::UBSanitizer::SourceLocation&) __attribute__((used));
+void __ubsan_handle_nonnull_return_v1(const NonnullReturnData&, const AK::UBSanitizer::SourceLocation& location)
 {
     critical_dmesgln("KUBSAN: null pointer return from function declared to never return null");
     print_location(location);
 }
 
-void __ubsan_handle_nullability_return_v1(const NonnullReturnData& data, const SourceLocation& location) __attribute__((used));
-void __ubsan_handle_nullability_return_v1(const NonnullReturnData&, const SourceLocation& location)
+void __ubsan_handle_nullability_return_v1(const NonnullReturnData& data, const AK::UBSanitizer::SourceLocation& location) __attribute__((used));
+void __ubsan_handle_nullability_return_v1(const NonnullReturnData&, const AK::UBSanitizer::SourceLocation& location)
 {
     critical_dmesgln("KUBSAN: null pointer return from function declared to never return null");
     print_location(location);

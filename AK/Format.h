@@ -14,6 +14,7 @@
 #include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
+#include <AK/SourceLocation.h>
 #include <AK/StringView.h>
 
 #ifndef KERNEL
@@ -625,11 +626,24 @@ struct Formatter<Error> : Formatter<FormatString> {
         return Formatter<FormatString>::format(builder, "Error({})", error.string_literal());
 #else
         if (error.is_syscall())
-            return Formatter<FormatString>::format(builder, "{}: {} (errno={})", error.string_literal(), strerror(error.code()), error.code());
-        if (error.is_errno())
-            return Formatter<FormatString>::format(builder, "{} (errno={})", strerror(error.code()), error.code());
+            TRY(Formatter<FormatString>::format(builder, "{}: {} (errno={})", error.string_literal(), strerror(error.code()), error.code()));
+        else if (error.is_errno())
+            TRY(Formatter<FormatString>::format(builder, "{} (errno={})", strerror(error.code()), error.code()));
+        else
+            TRY(Formatter<FormatString>::format(builder, "{}", error.string_literal()));
 
-        return Formatter<FormatString>::format(builder, "{}", error.string_literal());
+#    ifdef ENABLE_ERROR_TRACES
+        TRY(Formatter<FormatString>::format(builder, "\n"));
+
+        auto& buffer = Detail::get_error_trace_buffer();
+        for (auto location : buffer) {
+            TRY(Formatter<FormatString>::format(builder, "  at {} ({}:{})\n", location.function_name(), location.filename(), location.line_number()));
+        }
+
+        Detail::clear_error_trace();
+#    endif
+
+        return {};
 #endif
     }
 };
@@ -641,6 +655,14 @@ struct Formatter<ErrorOr<T, ErrorType>> : Formatter<FormatString> {
         if (error_or.is_error())
             return Formatter<FormatString>::format(builder, "{}", error_or.error());
         return Formatter<FormatString>::format(builder, "{{{}}}", error_or.value());
+    }
+};
+
+template<>
+struct Formatter<SourceLocation> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, SourceLocation location)
+    {
+        return AK::Formatter<FormatString>::format(builder, "[{} @ {}:{}]", location.function_name(), location.filename(), location.line_number());
     }
 };
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/ErrorTraces.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
@@ -20,11 +21,21 @@
 
 namespace AK {
 
+#ifdef ENABLE_ERROR_TRACES
+#    define LOCATION_PARAMETER , SourceLocation location = SourceLocation::current()
+#    define LOCATION_CONSTRUCTOR_PARAMETER , SourceLocation location
+#    define LOCATION_VALUE , location
+#else
+#    define LOCATION_PARAMETER
+#    define LOCATION_CONSTRUCTOR_PARAMETER
+#    define LOCATION_VALUE
+#endif
+
 class Error {
 public:
-    static Error from_errno(int code) { return Error(code); }
-    static Error from_syscall(StringView syscall_name, int rc) { return Error(syscall_name, rc); }
-    static Error from_string_literal(StringView string_literal) { return Error(string_literal); }
+    static Error from_errno(int code LOCATION_PARAMETER) { return Error(code LOCATION_VALUE); }
+    static Error from_syscall(StringView syscall_name, int rc LOCATION_PARAMETER) { return Error(syscall_name, rc LOCATION_VALUE); }
+    static Error from_string_literal(StringView string_literal LOCATION_PARAMETER) { return Error(string_literal LOCATION_VALUE); }
 
     bool is_errno() const { return m_code != 0; }
     bool is_syscall() const { return m_syscall; }
@@ -32,23 +43,43 @@ public:
     int code() const { return m_code; }
     StringView string_literal() const { return m_string_literal; }
 
+#ifdef ENABLE_ERROR_TRACES
+    Error(Error const& error) = default;
+    Error(Error&& error, SourceLocation location = SourceLocation::current())
+        : m_code(error.m_code)
+        , m_string_literal(error.m_string_literal)
+        , m_syscall(error.m_syscall)
+    {
+        Detail::record_error_trace(location);
+    }
+#endif
+
 protected:
-    Error(int code)
+    Error(int code LOCATION_PARAMETER)
         : m_code(code)
     {
+#ifdef ENABLE_ERROR_TRACES
+        Detail::record_error_trace(location);
+#endif
     }
 
 private:
-    Error(StringView string_literal)
+    Error(StringView string_literal LOCATION_CONSTRUCTOR_PARAMETER)
         : m_string_literal(string_literal)
     {
+#ifdef ENABLE_ERROR_TRACES
+        Detail::record_error_trace(location);
+#endif
     }
 
-    Error(StringView syscall_name, int rc)
+    Error(StringView syscall_name, int rc LOCATION_CONSTRUCTOR_PARAMETER)
         : m_code(-rc)
         , m_string_literal(syscall_name)
         , m_syscall(true)
     {
+#ifdef ENABLE_ERROR_TRACES
+        Detail::record_error_trace(location);
+#endif
     }
 
     int m_code { 0 };

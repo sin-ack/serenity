@@ -326,6 +326,7 @@ if ("${SERENITY_ARCH}" STREQUAL "i686" OR "${SERENITY_ARCH}" STREQUAL "x86_64")
 endif()
 
 set(AK_SOURCES
+    ../AK/ErrorTraces.cpp
     ../AK/FlyString.cpp
     ../AK/GenericLexer.cpp
     ../AK/Hex.cpp
