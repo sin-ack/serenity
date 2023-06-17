@@ -5,8 +5,12 @@
  */
 
 #include <AK/URLParser.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/HTMLHyperlinkElementUtils.h>
+#include <LibWeb/HTML/HistoryHandlingBehavior.h>
+#include <LibWeb/HTML/TokenizedFeatures.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Loader/FrameLoader.h>
@@ -506,7 +510,6 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<DeprecatedString> 
     auto url = source->active_document()->parse_url(href());
 
     // 10. If that is successful, let URL be the resulting URL string.
-    auto url_string = url.to_deprecated_string();
 
     // 11. Otherwise, if parsing the URL failed, the user agent may report the
     // error to the user in a user-agent-specific manner, may queue an element
@@ -517,27 +520,27 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<DeprecatedString> 
 
     // 12. If hyperlinkSuffix is non-null, then append it to URL.
     if (hyperlink_suffix.has_value()) {
-        StringBuilder url_builder;
-        url_builder.append(url_string);
-        url_builder.append(*hyperlink_suffix);
-
-        url_string = url_builder.to_deprecated_string();
+        url.append_path(hyperlink_suffix.value());
     }
 
-    // FIXME: 13. Let request be a new request whose URL is URL and whose
-    // referrer policy is the current state of subject's referrerpolicy content
+    // 13. Let request be a new request whose URL is URL and whose referrer
+    // policy is the current state of subject's referrerpolicy content
     // attribute.
+    auto request = Fetch::Infrastructure::Request::create(Bindings::main_thread_vm());
+    request->set_url(url);
+    request->set_referrer_policy(hyperlink_element_utils_referrerpolicy());
 
-    // FIXME: 14. If subject's link types includes the noreferrer keyword, then
-    // set request's referrer to "no-referrer".
+    // 14. If subject's link types includes the noreferrer keyword, then set
+    // request's referrer to "no-referrer".
+    if (get_an_elements_noreferrer() == TokenizedFeature::NoReferrer::Yes) {
+        request->set_referrer(Fetch::Infrastructure::Request::Referrer::NoReferrer);
+    }
 
     // 15. Queue an element task on the DOM manipulation task source given
     // subject to navigate target to request with the source browsing context
     // set to source.
-    // FIXME: "navigate" means implementing the navigation algorithm here:
-    //        https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
-    hyperlink_element_utils_queue_an_element_task(Task::Source::DOMManipulation, [url_string, target] {
-        verify_cast<BrowsingContext>(*target).loader().load(url_string, FrameLoader::Type::Navigation);
+    hyperlink_element_utils_queue_an_element_task(Task::Source::DOMManipulation, [source, target, request] {
+        MUST(target->navigate(request, *source, false));
     });
 }
 
@@ -575,6 +578,17 @@ TokenizedFeature::NoOpener HTMLHyperlinkElementUtils::get_an_elements_noopener(S
 
     // 3. Return false.
     return TokenizedFeature::NoOpener::No;
+}
+
+// NOTE: This isn't part of the spec, but is for symmetry's sake.
+TokenizedFeature::NoReferrer HTMLHyperlinkElementUtils::get_an_elements_noreferrer() const
+{
+    auto rel = hyperlink_element_utils_rel().to_lowercase();
+    auto link_types = rel.view().split_view_if(Infra::is_ascii_whitespace);
+
+    if (link_types.contains_slow("noreferrer"sv))
+        return TokenizedFeature::NoReferrer::Yes;
+    return TokenizedFeature::NoReferrer::No;
 }
 
 }

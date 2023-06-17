@@ -70,6 +70,7 @@ private:
     bool cannot_navigate() const;
     DeprecatedString get_an_elements_target() const;
     TokenizedFeature::NoOpener get_an_elements_noopener(StringView target) const;
+    TokenizedFeature::NoReferrer get_an_elements_noreferrer() const;
 
     Optional<AK::URL> m_url;
 };
