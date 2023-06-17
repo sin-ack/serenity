@@ -47,6 +47,13 @@ WebIDL::ExceptionOr<void> HTMLAnchorElement::set_hyperlink_element_utils_href(De
     return set_attribute(HTML::AttributeNames::href, move(href));
 }
 
+ReferrerPolicy::ReferrerPolicy HTMLAnchorElement::hyperlink_element_utils_referrerpolicy() const
+{
+    auto policy_string = attribute(HTML::AttributeNames::referrerpolicy);
+    auto maybe_policy = ReferrerPolicy::from_string(policy_string);
+    return maybe_policy.value_or(ReferrerPolicy::ReferrerPolicy::EmptyString);
+}
+
 void HTMLAnchorElement::run_activation_behavior(Web::DOM::Event const&)
 {
     // The activation behavior of an a element element given an event event is:

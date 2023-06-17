@@ -10,6 +10,7 @@
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/TokenizedFeatures.h>
+#include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
 
 namespace Web::HTML {
 
@@ -57,6 +58,7 @@ protected:
     virtual bool hyperlink_element_utils_is_connected() const = 0;
     virtual DeprecatedString hyperlink_element_utils_target() const = 0;
     virtual DeprecatedString hyperlink_element_utils_rel() const = 0;
+    virtual ReferrerPolicy::ReferrerPolicy hyperlink_element_utils_referrerpolicy() const = 0;
     virtual void hyperlink_element_utils_queue_an_element_task(HTML::Task::Source source, Function<void()> steps) = 0;
 
     void set_the_url();

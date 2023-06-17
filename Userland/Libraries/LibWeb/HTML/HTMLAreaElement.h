@@ -9,6 +9,7 @@
 
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/HTMLHyperlinkElementUtils.h>
+#include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
 
 namespace Web::HTML {
 
@@ -37,6 +38,7 @@ private:
     virtual bool hyperlink_element_utils_is_connected() const override { return is_connected(); }
     virtual DeprecatedString hyperlink_element_utils_target() const override { return ""; }
     virtual DeprecatedString hyperlink_element_utils_rel() const override { return ""; }
+    virtual ReferrerPolicy::ReferrerPolicy hyperlink_element_utils_referrerpolicy() const override { return ReferrerPolicy::ReferrerPolicy::EmptyString; }
     virtual void hyperlink_element_utils_queue_an_element_task(HTML::Task::Source source, Function<void()> steps) override
     {
         queue_an_element_task(source, move(steps));
